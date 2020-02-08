@@ -7,6 +7,8 @@
     <services>
         <defaults public="false" autoconfigure="true" autowire="true"/>
 
+        <prototype namespace="App\Helper\" resource="../src/Helper/*" />
+
         <prototype namespace="App\Command\" resource="../src/Command/*">
             <tag name="console.command"/>
         </prototype>

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Command;
 
+use App\Helper\ContainerParametersHelper;
 use App\Mailer\Mailer;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -11,7 +12,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 class Passwords extends Command
 {
     private const URL = 'https://www.freel2tpvpn.com';
-    private const FILE = __DIR__ . '/../../var/passwords.txt';
 
     protected const NAME = 'app:passwords';
     protected const DESCRIPTION = 'check passwords from www.freel2tpvpn.com';
@@ -19,10 +19,14 @@ class Passwords extends Command
     /** @var Mailer */
     private $mailer;
 
-    public function __construct(Mailer $mailer)
+    /** @var ContainerParametersHelper */
+    private $helper;
+
+    public function __construct(Mailer $mailer, ContainerParametersHelper $helper)
     {
         parent::__construct(null);
         $this->mailer = $mailer;
+        $this->helper = $helper;
     }
 
     protected function configure(): void
@@ -39,14 +43,16 @@ class Passwords extends Command
 
         preg_match_all($pattern, $page, $matches, PREG_OFFSET_CAPTURE);
 
+        $filename = $this->helper->getParam('kernel.project_dir') . '/var/passwords.txt';
+
         $passwords = [];
         foreach ($matches[0] as $match) {
             $passwords[] = ltrim(rtrim(strip_tags($match[0])));
         }
 
-        $oldPasswords = $this->readPasswords();
+        $oldPasswords = $this->readPasswords($filename);
         if ($oldPasswords !== json_encode($passwords)) {
-            $this->savePasswords(json_encode($passwords));
+            $this->savePasswords($filename, json_encode($passwords));
             $emails = explode(',', $_ENV['EMAILS']);
             $subject = $_ENV['MESSAGE_SUBJECT'];
             $msg = '';
@@ -78,10 +84,10 @@ class Passwords extends Command
         return $data;
     }
 
-    private function readPasswords(): string
+    private function readPasswords(string $filename): string
     {
-        if (file_exists(self::FILE)) {
-            $file = fopen(self::FILE, 'r');
+        if (file_exists($filename)) {
+            $file = fopen($filename, 'r');
             $passwords = fread($file, 1000);
             fclose($file);
             return $passwords;
@@ -90,9 +96,9 @@ class Passwords extends Command
         return '';
     }
 
-    private function savePasswords(string $passwords): void
+    private function savePasswords(string $filename, string $passwords): void
     {
-        $file = fopen(self::FILE, 'w');
+        $file = fopen($filename, 'w');
         fwrite($file, $passwords);
         fclose($file);
     }
