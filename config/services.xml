@@ -1,0 +1,25 @@
+<?xml version="1.0" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+
+    <services>
+        <defaults public="false" autoconfigure="true" autowire="true"/>
+
+        <prototype namespace="App\Command\" resource="../src/Command/*">
+            <tag name="console.command"/>
+        </prototype>
+
+        <service id="App\Mailer\MailerTransport" class="App\Mailer\MailerTransport">
+            <argument>%env(MAILER_HOST)%</argument>
+            <argument>%env(MAILER_PORT)%</argument>
+            <argument>%env(MAILER_ENCRYPTION)%</argument>
+            <argument>%env(MAILER_USERNAME)%</argument>
+            <argument>%env(MAILER_PASSWORD)%</argument>
+        </service>
+
+        <service id="App\Mailer\Mailer" class="App\Mailer\Mailer"/>
+
+    </services>
+</container>
